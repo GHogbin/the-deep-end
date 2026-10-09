@@ -29,5 +29,10 @@ public final class DeepEndItems {
     public static final RegistryObject<Item> SHRINE_FRAME_ITEM = ITEMS.register("shrine_frame",
             () -> new BlockItem(DeepEndBlocks.SHRINE_FRAME.get(), new Item.Properties().setId(ITEMS.key("shrine_frame"))));
 
+    public static final RegistryObject<Item> ANCIENT_SHRINE_STONE_ITEM = ITEMS.register("ancient_shrine_stone",
+            () -> new BlockItem(DeepEndBlocks.ANCIENT_SHRINE_STONE.get(), new Item.Properties().setId(ITEMS.key("ancient_shrine_stone"))));
+    public static final RegistryObject<Item> ANCIENT_SHRINE_SLAB_ITEM = ITEMS.register("ancient_shrine_slab",
+            () -> new BlockItem(DeepEndBlocks.ANCIENT_SHRINE_SLAB.get(), new Item.Properties().setId(ITEMS.key("ancient_shrine_slab"))));
+
     private DeepEndItems() {}
 }

@@ -4,8 +4,8 @@ Target: Minecraft 26.3 / Forge 66.0.9 / Java 25.
 
 ## Immediate priorities
 
-1. Fix missing textures. Reproduce on a clean client, examine resource-loading errors, verify all modern item definitions, blockstates, models, and packaged PNGs. Test inventory, held items, and placed blocks separately.
-2. Rebuild the Observation Shrine to match the approved concept: stepped dark platform, asymmetric rear towers, cyan rune bands, broken diamond frame, suspended faceted violet crystal, shorter perimeter spires, and a reachable interactive front pedestal.
+1. Keep texture-loading regression checks in place. The user reported the 0.3.0 tests passed; the current custom-art revision needs fresh client validation.
+2. Validate the 0.3.1 subtle ancient-ruins shrine: custom charcoal stone, sparse teal markings, darker crystal, and continuous frame/centerpiece geometry. The user rejected the 0.3.0 vanilla-texture appearance.
 3. Verify shrine placement safety, Lens detection, activation, and save/reload in a disposable test world.
 
 ## Later gameplay slices

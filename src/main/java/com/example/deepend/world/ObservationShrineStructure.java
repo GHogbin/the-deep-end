@@ -2,9 +2,9 @@ package com.example.deepend.world;
 
 import com.example.deepend.registry.DeepEndBlocks;
 import com.example.deepend.block.ShrineFrameBlock;
+import com.example.deepend.block.ShrineCrystalBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** Preflight the entire clearance volume before changing any blocks. */
@@ -27,6 +27,8 @@ public final class ObservationShrineStructure {
             BlockState state = state(entry.getValue());
             if (entry.getValue() == ShrineLayout.Material.FRAME)
                 state = state.setValue(ShrineFrameBlock.ASCENDING, (pos.x() >= 0) == (pos.y() < 9));
+            if (entry.getValue() == ShrineLayout.Material.FRAME_FORK)
+                state = state.setValue(ShrineFrameBlock.FORK, true);
             level.setBlock(base.offset(pos.x(), pos.y(), pos.z()), state, 3);
         }
         return true;
@@ -34,13 +36,12 @@ public final class ObservationShrineStructure {
 
     private static BlockState state(ShrineLayout.Material material) {
         return switch (material) {
-            case FOUNDATION -> Blocks.OBSIDIAN.defaultBlockState();
-            case DECK -> Blocks.POLISHED_BLACKSTONE.defaultBlockState();
-            case STEP -> Blocks.POLISHED_BLACKSTONE_SLAB.defaultBlockState();
-            case TOWER -> Blocks.CRYING_OBSIDIAN.defaultBlockState();
+            case FOUNDATION, DECK, TOWER -> DeepEndBlocks.ANCIENT_SHRINE_STONE.get().defaultBlockState();
+            case STEP -> DeepEndBlocks.ANCIENT_SHRINE_SLAB.get().defaultBlockState();
             case RUNE -> DeepEndBlocks.SHRINE_RUNE_STONE.get().defaultBlockState();
             case CRYSTAL -> DeepEndBlocks.SHRINE_CRYSTAL.get().defaultBlockState();
-            case FRAME -> DeepEndBlocks.SHRINE_FRAME.get().defaultBlockState();
+            case LARGE_CRYSTAL -> DeepEndBlocks.SHRINE_CRYSTAL.get().defaultBlockState().setValue(ShrineCrystalBlock.LARGE, true);
+            case FRAME, FRAME_FORK -> DeepEndBlocks.SHRINE_FRAME.get().defaultBlockState();
             case PEDESTAL -> DeepEndBlocks.OBSERVATION_SHRINE.get().defaultBlockState();
         };
     }

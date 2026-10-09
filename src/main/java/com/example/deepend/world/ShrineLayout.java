@@ -9,7 +9,7 @@ public final class ShrineLayout {
     public static final int RADIUS = 7;
     public static final int HEIGHT = 18;
     public record Position(int x, int y, int z) {}
-    public enum Material { FOUNDATION, DECK, STEP, TOWER, RUNE, CRYSTAL, FRAME, PEDESTAL }
+    public enum Material { FOUNDATION, DECK, STEP, TOWER, RUNE, CRYSTAL, LARGE_CRYSTAL, FRAME, FRAME_FORK, PEDESTAL }
     private ShrineLayout() {}
 
     public static Map<Position, Material> create() {
@@ -27,7 +27,7 @@ public final class ShrineLayout {
         for (int side : new int[]{-1, 1}) {
             int height = side < 0 ? 16 : 13;
             for (int y = 2; y <= height; y++) {
-                put(plan, side * 5, y, 3, y <= height - 2 ? Material.RUNE : Material.TOWER);
+                put(plan, side * 5, y, 3, y % 4 == 0 && y <= height - 2 ? Material.RUNE : Material.TOWER);
                 if (y <= height - 3) put(plan, side * 5, y, 4, Material.TOWER);
                 if (y <= height - 5) put(plan, side * 6, y, 3, Material.TOWER);
                 if (y <= height - 7) put(plan, side * 6, y, 4, Material.TOWER);
@@ -40,14 +40,14 @@ public final class ShrineLayout {
                 put(plan, side * 5, tip, z, Material.CRYSTAL);
             }
         }
-        // Fractured diamond, open at the upper right.
-        for (int x = -4; x <= 4; x++) {
-            for (int y = 5; y <= 13; y++) {
-                if (Math.abs(x) + Math.abs(y - 9) != 4 || (x > 0 && y >= 11)) continue;
-                put(plan, x, y, 0, Material.FRAME);
-            }
+        // Each model starts at a vertex and reaches the next vertex, not a centred loose bar.
+        put(plan, -4, 9, 0, Material.FRAME_FORK);
+        for (int x = -3; x < 4; x++) {
+            int top = 13 - Math.abs(x);
+            if (x != 1) put(plan, x, top, 0, Material.FRAME); // one deliberate fracture
+            put(plan, x, 5 + Math.abs(x), 0, Material.FRAME);
         }
-        for (int y = 8; y <= 10; y++) put(plan, 0, y, 0, Material.CRYSTAL);
+        put(plan, 0, 9, 0, Material.LARGE_CRYSTAL);
         // Intentional deck replacements for cyan floor lines.
         for (int z = -5; z <= 2; z++) plan.put(new Position(0, 1, z), Material.RUNE);
         for (int x = -4; x <= 4; x++) plan.put(new Position(x, 1, 2), Material.RUNE);

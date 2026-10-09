@@ -9,7 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '0.3.0-26.3'
+version = '0.3.1-26.3'
 group = 'com.example.deepend'
 
 // Mojang ships Java 25 to end users in 26.1+, so your mod should target Java 25.
@@ -70,6 +70,15 @@ tasks.register('verifyModJar') {
         try {
             def required = ['com/example/deepend/DeepEnd.class',
                 'com/example/deepend/world/ObservationShrineStructure.class', 'META-INF/mods.toml']
+            required += ['com/example/deepend/block/ShrineCrystalBlock.class',
+                'assets/deep_end/models/block/shrine_crystal_large.json',
+                'assets/deep_end/models/block/shrine_frame_descending.json',
+                'assets/deep_end/models/block/shrine_frame_fork.json',
+                'assets/deep_end/models/block/ancient_shrine_slab_top.json',
+                'assets/deep_end/textures/item/ancient_resonant_crystal.png']
+            ['ancient_shrine_stone', 'ancient_crystal', 'ancient_rune_inlay'].each { name ->
+                required += "assets/deep_end/textures/block/${name}.png"
+            }
             ['resonant_crystal', 'chorus_fibre', 'resonance_lens', 'resonant_crystal_block', 'observation_shrine'].each { name ->
                 required += ["assets/deep_end/items/${name}.json", "assets/deep_end/models/item/${name}.json"]
                 def folder = name in ['resonant_crystal_block', 'observation_shrine'] ? 'block' : 'item'
@@ -80,7 +89,7 @@ tasks.register('verifyModJar') {
             }
             if (archive.entries().toList().any { it.name.startsWith('com/example/examplemod/') })
                 throw new GradleException('Unexpected example mod classes')
-            ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame'].each { name ->
+            ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame', 'ancient_shrine_stone', 'ancient_shrine_slab'].each { name ->
                 ["items/${name}.json", "models/item/${name}.json", "models/block/${name}.json", "blockstates/${name}.json"].each { path ->
                     if (archive.getEntry("assets/deep_end/${path}") == null)
                         throw new GradleException("Missing packaged shrine asset: ${path}")
@@ -135,11 +144,28 @@ tasks.register('verifyAssetReferences') {
             if (decoded == null || decoded.width < 16 || decoded.height < 16)
                 throw new GradleException("Invalid texture PNG: ${it.name}")
         }
-        ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame'].each { name ->
+        ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame', 'ancient_shrine_stone', 'ancient_shrine_slab'].each { name ->
             ["items/${name}.json", "models/item/${name}.json", "models/block/${name}.json", "blockstates/${name}.json"].each { path ->
                 if (!new File(resources, "assets/deep_end/${path}").isFile())
                     throw new GradleException("Missing shrine asset: ${path}")
             }
+        }
+        ['ancient_shrine_stone', 'ancient_crystal', 'ancient_rune_inlay'].each { name ->
+            def image = javax.imageio.ImageIO.read(new File(resources, "assets/deep_end/textures/block/${name}.png"))
+            if (image.width != 32 || image.height != 32)
+                throw new GradleException("Ancient shrine texture must be 32x32: ${name}")
+        }
+        def crystalIcon = javax.imageio.ImageIO.read(new File(resources, 'assets/deep_end/textures/item/ancient_resonant_crystal.png'))
+        if (crystalIcon.width != 32 || crystalIcon.height != 32 || !crystalIcon.colorModel.hasAlpha() ||
+                (crystalIcon.getRGB(0, 0) >>> 24) != 0)
+            throw new GradleException('Crystal icon must be 32x32 with transparent margins')
+        ['shrine_frame', 'shrine_frame_descending'].each { name ->
+            def part = json.parse(new File(resources, "assets/deep_end/models/block/${name}.json")).elements[0]
+            def radians = Math.toRadians(part.rotation.angle as double)
+            def length = (part.to[0] - part.from[0]) as double
+            if (part.rotation.rescale || Math.abs(length * Math.cos(radians) - 16) > 0.001 ||
+                    Math.abs(Math.abs(length * Math.sin(radians)) - 16) > 0.001)
+                throw new GradleException("Frame segment must reach exactly the next diagonal vertex")
         }
     }
 }
