@@ -1,0 +1,26 @@
+package com.example.deepend.registry;
+
+import com.example.deepend.DeepEnd;
+import com.example.deepend.item.ResonanceLensItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.BlockItem;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+public final class DeepEndItems {
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, DeepEnd.MOD_ID);
+
+    public static final RegistryObject<Item> RESONANT_CRYSTAL = ITEMS.register("resonant_crystal",
+            () -> new Item(new Item.Properties().setId(ITEMS.key("resonant_crystal"))));
+    public static final RegistryObject<Item> CHORUS_FIBRE = ITEMS.register("chorus_fibre",
+            () -> new Item(new Item.Properties().setId(ITEMS.key("chorus_fibre"))));
+    public static final RegistryObject<Item> RESONANCE_LENS = ITEMS.register("resonance_lens",
+            () -> new ResonanceLensItem(new Item.Properties().setId(ITEMS.key("resonance_lens")).stacksTo(1).durability(16)));
+    public static final RegistryObject<Item> RESONANT_CRYSTAL_BLOCK_ITEM = ITEMS.register("resonant_crystal_block",
+            () -> new BlockItem(DeepEndBlocks.RESONANT_CRYSTAL_BLOCK.get(), new Item.Properties().setId(ITEMS.key("resonant_crystal_block"))));
+    public static final RegistryObject<Item> OBSERVATION_SHRINE_ITEM = ITEMS.register("observation_shrine",
+            () -> new BlockItem(DeepEndBlocks.OBSERVATION_SHRINE.get(), new Item.Properties().setId(ITEMS.key("observation_shrine"))));
+
+    private DeepEndItems() {}
+}
