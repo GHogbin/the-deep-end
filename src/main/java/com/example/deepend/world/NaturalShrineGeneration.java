@@ -8,7 +8,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 /** Deterministic, sparse landmark discovery for distant End exploration. */
 public final class NaturalShrineGeneration {
-    public static final int CELL_SIZE = 4096;
+    public static final int CELL_SIZE = 2048;
     private static final int MIN_DISTANCE = 8000;
     private NaturalShrineGeneration() {}
 
@@ -19,18 +19,34 @@ public final class NaturalShrineGeneration {
         if (distance < MIN_DISTANCE) return;
         int cellX = Math.floorDiv(player.getBlockX(), CELL_SIZE);
         int cellZ = Math.floorDiv(player.getBlockZ(), CELL_SIZE);
-        long seed = mix(cellX * 341873128712L + cellZ * 132897987541L);
-        // Three out of four grid cells are intentionally silent; the fourth has a landmark.
-        if ((seed & 3L) != 0L) return;
-        int candidateX = cellX * CELL_SIZE + 1024 + (int)((seed >>> 8) & 2047);
-        int candidateZ = cellZ * CELL_SIZE + 1024 + (int)((seed >>> 20) & 2047);
-        if (player.distanceToSqr(candidateX + .5D, player.getY(), candidateZ + .5D) > 192D * 192D) return;
+        BlockPos candidate = candidateForCell(cellX, cellZ);
+        if (player.distanceToSqr(candidate.getX() + .5D, player.getY(), candidate.getZ() + .5D) > 768D * 768D) return;
         ServerLevel level = (ServerLevel) player.level();
-        int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE, candidateX, candidateZ);
-        BlockPos base = new BlockPos(candidateX, surface + 1, candidateZ);
+        int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE, candidate.getX(), candidate.getZ());
+        BlockPos base = new BlockPos(candidate.getX(), surface + 1, candidate.getZ());
         if (surface <= level.getMinY() || level.getBlockState(base.below()).isAir()) return;
         if (ObservationShrineStructure.placeSingle(level, base)) player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                 "The Resonance Lens stirs: an ancient shrine has surfaced nearby."));
+    }
+
+    public static BlockPos candidateForCell(int cellX, int cellZ) {
+        long seed = mix(cellX * 341873128712L + cellZ * 132897987541L);
+        return new BlockPos(cellX * CELL_SIZE + 512 + (int)((seed >>> 8) & 1023), 0,
+                cellZ * CELL_SIZE + 512 + (int)((seed >>> 20) & 1023));
+    }
+
+    public static BlockPos nearestCandidate(BlockPos origin) {
+        BlockPos nearest = null;
+        double distance = Double.MAX_VALUE;
+        int cellX = Math.floorDiv(origin.getX(), CELL_SIZE);
+        int cellZ = Math.floorDiv(origin.getZ(), CELL_SIZE);
+        for (int x = cellX - 2; x <= cellX + 2; x++) for (int z = cellZ - 2; z <= cellZ + 2; z++) {
+            BlockPos candidate = candidateForCell(x, z);
+            if (Math.hypot(candidate.getX(), candidate.getZ()) < MIN_DISTANCE) continue;
+            double next = origin.distSqr(candidate);
+            if (next < distance) { distance = next; nearest = candidate; }
+        }
+        return nearest;
     }
 
     public static long mix(long value) {
