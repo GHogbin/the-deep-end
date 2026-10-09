@@ -16,6 +16,14 @@ public final class DeepEnd {
         DeepEndItems.ITEMS.register(bus);
         DeepEndBlocks.BLOCKS.register(bus);
         DeepEndEntities.ENTITIES.register(bus);
+        // The renderer event classes are client-only in 26.3. Reflection keeps the common
+        // mod constructor safe on a dedicated server while registering early on a client.
+        try {
+            Class.forName("com.example.deepend.client.DeepEndClientEvents")
+                    .getMethod("register").invoke(null);
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            // Dedicated servers do not load client renderer classes.
+        }
     }
 
     public static void registerCommands(RegisterCommandsEvent event) {
