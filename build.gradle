@@ -9,7 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '0.4.0-26.3'
+version = '0.4.1-26.3'
 group = 'com.example.deepend'
 
 // Mojang ships Java 25 to end users in 26.1+, so your mod should target Java 25.
@@ -174,9 +174,35 @@ tasks.register('verifyAssetReferences') {
                 throw new GradleException("Frame segment must reach exactly the next diagonal vertex")
         }
         def unified = json.parse(new File(resources, 'assets/deep_end/models/block/awakened_shrine.json'))
-        if (unified.elements.size() != 105 || unified.elements.any {
+        if (unified.elements.size() != 1081 || unified.elements.any {
                 (it.from + it.to).any { coordinate -> coordinate < 0 || coordinate > 16 }
             }) throw new GradleException('Unified shrine model must fit its normalized 18-block display')
+        if (unified.elements.count { it.light_emission == 15 } != 354 ||
+                unified.elements.any { it.light_emission != null && (it.light_emission < 0 || it.light_emission > 15) })
+            throw new GradleException('Reference shrine must retain its emissive rune and crystal details')
+        // Stone must remain naturally lit rather than making the entire display fullbright.
+        if (unified.elements.findAll { it.faces.north.texture == '#stone' }.any { it.light_emission })
+            throw new GradleException('Ancient masonry should not emit light')
+        unified.elements.each { element ->
+            (0..<8).each { mask ->
+                def corner = (0..<3).collect { axis ->
+                    ((mask & (1 << axis)) != 0 ? element.to[axis] : element.from[axis]) as double
+                }
+                if (element.rotation) {
+                    def rotation = element.rotation
+                    def axis = ['x':0, 'y':1, 'z':2][rotation.axis]
+                    def i = (axis + 1) % 3
+                    def j = (axis + 2) % 3
+                    def a = corner[i] - rotation.origin[i]
+                    def b = corner[j] - rotation.origin[j]
+                    def angle = Math.toRadians(rotation.angle as double)
+                    corner[i] = rotation.origin[i] + a * Math.cos(angle) - b * Math.sin(angle)
+                    corner[j] = rotation.origin[j] + a * Math.sin(angle) + b * Math.cos(angle)
+                }
+                if (corner.any { it < 0 || it > 16 })
+                    throw new GradleException('Rotated shrine corner outside display envelope')
+            }
+        }
     }
 }
 
