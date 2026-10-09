@@ -9,7 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '0.2.4-26.3'
+version = '0.9.1-26.3'
 group = 'com.example.deepend'
 
 // Mojang ships Java 25 to end users in 26.1+, so your mod should target Java 25.
@@ -70,6 +70,24 @@ tasks.register('verifyModJar') {
         try {
             def required = ['com/example/deepend/DeepEnd.class',
                 'com/example/deepend/world/ObservationShrineStructure.class', 'META-INF/mods.toml']
+            required += ['com/example/deepend/block/ShrineCrystalBlock.class',
+                'com/example/deepend/world/ShrineTransformation.class',
+                'com/example/deepend/entity/AncientShrineEntity.class',
+                'com/example/deepend/registry/DeepEndEntities.class',
+                'com/example/deepend/world/NaturalShrineGeneration.class',
+                'com/example/deepend/block/ShrineCollisionBlock.class',
+                'assets/deep_end/models/block/awakened_shrine.json',
+                'assets/deep_end/blockstates/awakened_shrine.json',
+                'assets/deep_end/blockstates/shrine_collision.json',
+                'assets/deep_end/models/block/shrine_collision.json',
+                'assets/deep_end/models/block/shrine_crystal_large.json',
+                'assets/deep_end/models/block/shrine_frame_descending.json',
+                'assets/deep_end/models/block/shrine_frame_fork.json',
+                'assets/deep_end/models/block/ancient_shrine_slab_top.json',
+                'assets/deep_end/textures/item/ancient_resonant_crystal.png']
+            ['ancient_shrine_stone', 'ancient_crystal', 'ancient_rune_inlay'].each { name ->
+                required += "assets/deep_end/textures/block/${name}.png"
+            }
             ['resonant_crystal', 'chorus_fibre', 'resonance_lens', 'resonant_crystal_block', 'observation_shrine'].each { name ->
                 required += ["assets/deep_end/items/${name}.json", "assets/deep_end/models/item/${name}.json"]
                 def folder = name in ['resonant_crystal_block', 'observation_shrine'] ? 'block' : 'item'
@@ -80,7 +98,117 @@ tasks.register('verifyModJar') {
             }
             if (archive.entries().toList().any { it.name.startsWith('com/example/examplemod/') })
                 throw new GradleException('Unexpected example mod classes')
+            ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame', 'ancient_shrine_stone', 'ancient_shrine_slab'].each { name ->
+                ["items/${name}.json", "models/item/${name}.json", "models/block/${name}.json", "blockstates/${name}.json"].each { path ->
+                    if (archive.getEntry("assets/deep_end/${path}") == null)
+                        throw new GradleException("Missing packaged shrine asset: ${path}")
+                }
+            }
         } finally { archive.close() }
     }
 }
 tasks.named('check') { dependsOn tasks.named('verifyModJar') }
+
+tasks.register('verifyShrineLayout', JavaExec) {
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.example.deepend.world.ShrineLayoutTest'
+}
+
+// Acceptance tests currently run as an explicit Java main, not a JUnit suite.
+tasks.named('test') { failOnNoDiscoveredTests = false }
+
+tasks.register('verifyAssetReferences') {
+    doLast {
+        def resources = file('src/main/resources')
+        def json = new groovy.json.JsonSlurper()
+        def validateReference = { String id, String folder, String extension ->
+            if (id.startsWith('deep_end:')) {
+                def target = new File(resources, "assets/deep_end/${folder}/${id.substring(9)}.${extension}")
+                if (!target.isFile()) throw new GradleException("Unresolved resource: ${id} (${folder})")
+            }
+        }
+        def visit
+        visit = { Object value ->
+            if (value instanceof Map) {
+                value.each { key, child ->
+                    if (key in ['parent', 'model'] && child instanceof String)
+                        validateReference(child, 'models', 'json')
+                    if (key == 'textures' && child instanceof Map)
+                        child.values().findAll { it instanceof String }.each { validateReference(it, 'textures', 'png') }
+                    visit(child)
+                }
+                if (value.containsKey('from') && value.containsKey('to')) {
+                    if (value.from.size() != 3 || value.to.size() != 3 ||
+                            (value.from + value.to).any { it < -16 || it > 32 })
+                        throw new GradleException('Model element outside Minecraft bounds')
+                }
+            } else if (value instanceof List) value.each { visit(it) }
+        }
+        fileTree(new File(resources, 'assets/deep_end')).matching { include '**/*.json' }.each {
+            visit(json.parse(it))
+        }
+        fileTree(new File(resources, 'assets/deep_end/textures')).matching { include '**/*.png' }.each {
+            def decoded = javax.imageio.ImageIO.read(it)
+            if (decoded == null || decoded.width < 16 || decoded.height < 16)
+                throw new GradleException("Invalid texture PNG: ${it.name}")
+        }
+        ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame', 'ancient_shrine_stone', 'ancient_shrine_slab'].each { name ->
+            ["items/${name}.json", "models/item/${name}.json", "models/block/${name}.json", "blockstates/${name}.json"].each { path ->
+                if (!new File(resources, "assets/deep_end/${path}").isFile())
+                    throw new GradleException("Missing shrine asset: ${path}")
+            }
+        }
+        ['ancient_shrine_stone', 'ancient_crystal', 'ancient_rune_inlay'].each { name ->
+            def image = javax.imageio.ImageIO.read(new File(resources, "assets/deep_end/textures/block/${name}.png"))
+            if (image.width != 32 || image.height != 32)
+                throw new GradleException("Ancient shrine texture must be 32x32: ${name}")
+        }
+        def crystalIcon = javax.imageio.ImageIO.read(new File(resources, 'assets/deep_end/textures/item/ancient_resonant_crystal.png'))
+        if (crystalIcon.width != 32 || crystalIcon.height != 32 || !crystalIcon.colorModel.hasAlpha() ||
+                (crystalIcon.getRGB(0, 0) >>> 24) != 0)
+            throw new GradleException('Crystal icon must be 32x32 with transparent margins')
+        ['shrine_frame', 'shrine_frame_descending'].each { name ->
+            def part = json.parse(new File(resources, "assets/deep_end/models/block/${name}.json")).elements[0]
+            def radians = Math.toRadians(part.rotation.angle as double)
+            def length = (part.to[0] - part.from[0]) as double
+            if (part.rotation.rescale || Math.abs(length * Math.cos(radians) - 16) > 0.001 ||
+                    Math.abs(Math.abs(length * Math.sin(radians)) - 16) > 0.001)
+                throw new GradleException("Frame segment must reach exactly the next diagonal vertex")
+        }
+        def unified = json.parse(new File(resources, 'assets/deep_end/models/block/awakened_shrine.json'))
+        if (unified.elements.size() != 1081 || unified.elements.any {
+                (it.from + it.to).any { coordinate -> coordinate < 0 || coordinate > 16 }
+            }) throw new GradleException('Unified shrine model must fit its normalized 18-block display')
+        if (unified.elements.count { it.light_emission == 15 } != 354 ||
+                unified.elements.any { it.light_emission != null && (it.light_emission < 0 || it.light_emission > 15) })
+            throw new GradleException('Reference shrine must retain its emissive rune and crystal details')
+        // Stone must remain naturally lit rather than making the entire display fullbright.
+        if (unified.elements.findAll { it.faces.north.texture == '#stone' }.any { it.light_emission })
+            throw new GradleException('Ancient masonry should not emit light')
+        unified.elements.each { element ->
+            (0..<8).each { mask ->
+                def corner = (0..<3).collect { axis ->
+                    ((mask & (1 << axis)) != 0 ? element.to[axis] : element.from[axis]) as double
+                }
+                if (element.rotation) {
+                    def rotation = element.rotation
+                    def axis = ['x':0, 'y':1, 'z':2][rotation.axis]
+                    def i = (axis + 1) % 3
+                    def j = (axis + 2) % 3
+                    def a = corner[i] - rotation.origin[i]
+                    def b = corner[j] - rotation.origin[j]
+                    def angle = Math.toRadians(rotation.angle as double)
+                    corner[i] = rotation.origin[i] + a * Math.cos(angle) - b * Math.sin(angle)
+                    corner[j] = rotation.origin[j] + a * Math.sin(angle) + b * Math.cos(angle)
+                }
+                if (corner.any { it < 0 || it > 16 })
+                    throw new GradleException('Rotated shrine corner outside display envelope')
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verifyShrineLayout'), tasks.named('verifyAssetReferences')
+}

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "ascending=true,fork=false": {
+      "model": "deep_end:block/shrine_frame"
+    },
+    "ascending=false,fork=false": {
+      "model": "deep_end:block/shrine_frame_descending"
+    },
+    "ascending=true,fork=true": {
+      "model": "deep_end:block/shrine_frame_fork"
+    },
+    "ascending=false,fork=true": {
+      "model": "deep_end:block/shrine_frame_fork"
+    }
+  }
+}

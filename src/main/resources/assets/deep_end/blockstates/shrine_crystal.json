@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "large=false": {
+      "model": "deep_end:block/shrine_crystal"
+    },
+    "large=true": {
+      "model": "deep_end:block/shrine_crystal_large"
+    }
+  }
+}

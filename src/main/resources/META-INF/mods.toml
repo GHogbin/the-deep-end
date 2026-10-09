@@ -10,7 +10,7 @@ license="MIT"
 
 [[mods]]
 modId="deep_end"
-version="0.2.4-26.3"
+version="0.9.1-26.3"
 displayName="The Deep End"
 #updateJSONURL="https://example.com/updates.json" #optional
 #displayURL="https://example.com/" #optional
