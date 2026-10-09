@@ -9,7 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '0.2.4-26.3'
+version = '0.3.0-26.3'
 group = 'com.example.deepend'
 
 // Mojang ships Java 25 to end users in 26.1+, so your mod should target Java 25.
@@ -80,7 +80,70 @@ tasks.register('verifyModJar') {
             }
             if (archive.entries().toList().any { it.name.startsWith('com/example/examplemod/') })
                 throw new GradleException('Unexpected example mod classes')
+            ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame'].each { name ->
+                ["items/${name}.json", "models/item/${name}.json", "models/block/${name}.json", "blockstates/${name}.json"].each { path ->
+                    if (archive.getEntry("assets/deep_end/${path}") == null)
+                        throw new GradleException("Missing packaged shrine asset: ${path}")
+                }
+            }
         } finally { archive.close() }
     }
 }
 tasks.named('check') { dependsOn tasks.named('verifyModJar') }
+
+tasks.register('verifyShrineLayout', JavaExec) {
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.example.deepend.world.ShrineLayoutTest'
+}
+
+// Acceptance tests currently run as an explicit Java main, not a JUnit suite.
+tasks.named('test') { failOnNoDiscoveredTests = false }
+
+tasks.register('verifyAssetReferences') {
+    doLast {
+        def resources = file('src/main/resources')
+        def json = new groovy.json.JsonSlurper()
+        def validateReference = { String id, String folder, String extension ->
+            if (id.startsWith('deep_end:')) {
+                def target = new File(resources, "assets/deep_end/${folder}/${id.substring(9)}.${extension}")
+                if (!target.isFile()) throw new GradleException("Unresolved resource: ${id} (${folder})")
+            }
+        }
+        def visit
+        visit = { Object value ->
+            if (value instanceof Map) {
+                value.each { key, child ->
+                    if (key in ['parent', 'model'] && child instanceof String)
+                        validateReference(child, 'models', 'json')
+                    if (key == 'textures' && child instanceof Map)
+                        child.values().findAll { it instanceof String }.each { validateReference(it, 'textures', 'png') }
+                    visit(child)
+                }
+                if (value.containsKey('from') && value.containsKey('to')) {
+                    if (value.from.size() != 3 || value.to.size() != 3 ||
+                            (value.from + value.to).any { it < -16 || it > 32 })
+                        throw new GradleException('Model element outside Minecraft bounds')
+                }
+            } else if (value instanceof List) value.each { visit(it) }
+        }
+        fileTree(new File(resources, 'assets/deep_end')).matching { include '**/*.json' }.each {
+            visit(json.parse(it))
+        }
+        fileTree(new File(resources, 'assets/deep_end/textures')).matching { include '**/*.png' }.each {
+            def decoded = javax.imageio.ImageIO.read(it)
+            if (decoded == null || decoded.width < 16 || decoded.height < 16)
+                throw new GradleException("Invalid texture PNG: ${it.name}")
+        }
+        ['shrine_rune_stone', 'shrine_crystal', 'shrine_frame'].each { name ->
+            ["items/${name}.json", "models/item/${name}.json", "models/block/${name}.json", "blockstates/${name}.json"].each { path ->
+                if (!new File(resources, "assets/deep_end/${path}").isFile())
+                    throw new GradleException("Missing shrine asset: ${path}")
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verifyShrineLayout'), tasks.named('verifyAssetReferences')
+}

@@ -28,7 +28,7 @@ public final class DeepEndCommands {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             BlockPos pos = player.blockPosition().offset(0, 0, 10);
                             if (!ObservationShrineStructure.place(player.level(), pos)) {
-                                player.sendSystemMessage(Component.literal("Shrine needs clear, loaded space: 9 × 13 × 9 blocks, centred 10 blocks south of you. Nothing was changed."));
+                                player.sendSystemMessage(Component.literal("Shrine needs an empty, loaded 15 × 18 × 15 area, centred 10 blocks south of you. Nothing was changed."));
                                 return 0;
                             }
                             player.sendSystemMessage(Component.literal("Observation Shrine built 10 blocks south. Activate the low front pedestal with Resonant Crystal."));
