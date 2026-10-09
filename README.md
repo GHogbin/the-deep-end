@@ -21,6 +21,8 @@ This repository contains the current port, not the earlier Minecraft 1.20.1 prot
 
 The shrine uses custom Forge-rendered geometry and custom 32×32 charcoal stone, violet crystal, and weathered teal inlay textures. The placed 0.5.2 shrine directly uses the finished custom renderer, following the supplied reference with masonry courses, jagged buttressed towers, thick carved diamond arms, a multi-shard crystal, and emissive cyan script. Generated source artwork and prompts are preserved in docs/art-source. In-game appearance, performance and transformation acceptance remain pending. See [0.5.0 testing](docs/BUILD-0.5.0.md).
 
+Phase 2 now includes sparse deterministic natural shrine discovery beyond 8,000 blocks from the End origin. Candidate cells are 4,096 blocks wide, only one quarter contain a landmark, and the shrine appears when the player approaches a valid solid surface. The central Dragon Island remains excluded. See [0.6.0 testing](docs/BUILD-0.6.0.md).
+
 ## Build
 
 Install JDK 25 and set `JAVA_HOME` to its installation directory. The checked-in Gradle wrapper downloads its declared distribution; the first build also downloads Forge dependencies.
@@ -37,7 +39,7 @@ Linux/macOS:
 ./gradlew build --rerun-tasks --no-build-cache --no-daemon --no-configuration-cache --console=plain
 ```
 
-The current artifact is `build/libs/the-deep-end-26.3-0.5.2-26.3.jar`. Use the JAR for the exact source version you built, never an arbitrary first JAR from that folder.
+The current artifact is `build/libs/the-deep-end-26.3-0.6.0-26.3.jar`. Use the JAR for the exact source version you built, never an arbitrary first JAR from that folder.
 
 For the development client, run `gradlew.bat runClient` (or `./gradlew runClient`). See [testing](docs/TESTING.md) for the manual acceptance checklist.
 
