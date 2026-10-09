@@ -31,7 +31,7 @@ public final class DeepEndCommands {
                                 player.sendSystemMessage(Component.literal("Shrine needs an empty, loaded 15 × 18 × 15 area, centred 10 blocks south of you. Nothing was changed."));
                                 return 0;
                             }
-                            player.sendSystemMessage(Component.literal("Observation Shrine built 10 blocks south. Activate the low front pedestal with Resonant Crystal."));
+                            player.sendSystemMessage(Component.literal("Shrine multiblock built 10 blocks south. Right-click its front pedestal with Resonant Crystal to transform it; sneak-right-click to restore."));
                             return 1;
                         })));
     }

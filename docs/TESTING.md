@@ -15,9 +15,11 @@ Use a new disposable Creative world with cheats enabled and Minecraft 26.3 / For
 1. Enter the End with `/execute in minecraft:the_end run tp @s 0 80 0`, then find a safe platform or use Creative flight.
 2. Run `/deepend region`; check the reported region changes at more distant coordinates.
 3. Stand near a clear area and run `/deepend shrine`. The structure is centred 10 blocks south and requires an empty, loaded 15 × 18 × 15 placement area. If terrain blocks placement, fly a few blocks above a flat End island and retry; blocks are never cleared automatically.
-4. Approach from the north/front. Check the charcoal stepped base, tall left and shorter right tower, four capped spires, sparse teal runes, continuous diamond frame with one deliberate break, and a single floating violet crystal (not three beads). Right-click the low front pedestal with Resonant Crystal. Verify the lore/signal messages, crystal consumption, chime, and white particles.
+4. Approach from the north/front and right-click the low pedestal with Resonant Crystal. The complete build must change into one custom rendered shrine. Verify the long charcoal surfaces, unequal towers, four capped spires, teal runes, joined diamond frame with one fracture, and continuous crystal. Verify one Crystal consumed, lore messages, chime, and particles.
 5. Use Resonance Lens nearby in the End. Verify the pedestal coordinates are reported and durability is consumed.
 6. Try placing again where blocks already exist. It should refuse without changing blocks.
-7. Save, exit, reopen, and repeat activation and Lens detection.
+7. Save, exit, reopen: the transformed model and walkable platform must persist. Activate again: it should report already awakened, without consuming a Crystal or duplicating the model. The Lens should still locate the pedestal.
+8. Sneak-right-click with a Crystal: the model disappears and the block build returns, without consuming a Crystal. Activate again to confirm the cycle is repeatable.
+9. Restore and remove one rune. Normal activation must refuse, report the mismatch coordinates, and consume nothing. Replace the rune and retry.
 
-Compare the actual landmark with the approved concept and report differences. The centerpiece is one extended native JSON model, not a bespoke entity renderer or shader. Place a new shrine: old generated structures are not rebuilt automatically. Geometry and asset checks cannot prove correct client appearance.
+This first recipe is north-facing only. Place a NEW blueprint rather than relying on old generated shrines. Standalone shrine blocks no longer awaken unless the complete recipe is present. See docs/BUILD-0.4.0.md for cleanup/foreign-block safety tests. Automated checks cannot prove actual client appearance or persistence.

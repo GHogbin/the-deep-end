@@ -20,6 +20,16 @@ public final class ShrineLayoutTest {
         for (var pos : plan.keySet()) require(Math.abs(pos.x()) <= 7 && Math.abs(pos.z()) <= 7
                 && pos.y() >= 0 && pos.y() < 18, "clearance bounds");
         verifyFrameChain(plan);
+        require(ShrineRecipe.firstMismatch(plan, (pos, material) -> plan.get(pos) == material).isEmpty(), "complete recipe accepted");
+        var missing = new java.util.HashMap<>(plan);
+        missing.remove(new ShrineLayout.Position(-5, 4, 3));
+        require(ShrineRecipe.firstMismatch(plan, (pos, material) -> missing.get(pos) == material).isPresent(), "missing rune rejected");
+        var wrong = new java.util.HashMap<>(plan);
+        wrong.put(new ShrineLayout.Position(-5, 4, 3), ShrineLayout.Material.TOWER);
+        require(ShrineRecipe.firstMismatch(plan, (pos, material) -> wrong.get(pos) == material).isPresent(), "wrong component rejected");
+        var obstruction = new java.util.HashMap<>(plan);
+        obstruction.put(new ShrineLayout.Position(1, 8, 0), ShrineLayout.Material.TOWER);
+        require(ShrineRecipe.firstMismatch(plan, (pos, material) -> obstruction.get(pos) == material).isPresent(), "interior obstruction rejected");
         try {
             plan.clear();
             throw new AssertionError("layout must be immutable");

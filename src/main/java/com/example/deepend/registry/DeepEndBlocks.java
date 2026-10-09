@@ -4,11 +4,13 @@ import com.example.deepend.DeepEnd;
 import com.example.deepend.block.ObservationShrineBlock;
 import com.example.deepend.block.ShrineFrameBlock;
 import com.example.deepend.block.ShrineCrystalBlock;
+import com.example.deepend.block.ShrineCollisionBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -22,7 +24,7 @@ public final class DeepEndBlocks {
 
     public static final RegistryObject<Block> OBSERVATION_SHRINE = BLOCKS.register("observation_shrine",
             () -> new ObservationShrineBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("observation_shrine")).mapColor(MapColor.COLOR_PURPLE)
-                    .strength(3.0F, 10.0F).sound(SoundType.STONE).lightLevel(state -> 3)));
+                    .strength(3.0F, 10.0F).sound(SoundType.STONE).lightLevel(state -> 3).pushReaction(PushReaction.IMMOVEABLE)));
 
     public static final RegistryObject<Block> SHRINE_RUNE_STONE = BLOCKS.register("shrine_rune_stone",
             () -> new Block(BlockBehaviour.Properties.of().setId(BLOCKS.key("shrine_rune_stone"))
@@ -42,6 +44,13 @@ public final class DeepEndBlocks {
     public static final RegistryObject<Block> ANCIENT_SHRINE_SLAB = BLOCKS.register("ancient_shrine_slab",
             () -> new SlabBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("ancient_shrine_slab"))
                     .mapColor(MapColor.COLOR_BLACK).strength(4.0F, 20.0F).sound(SoundType.STONE)));
+
+    public static final RegistryObject<Block> AWAKENED_SHRINE = BLOCKS.register("awakened_shrine",
+            () -> new Block(BlockBehaviour.Properties.of().setId(BLOCKS.key("awakened_shrine"))
+                    .noOcclusion().noCollision().noLootTable().strength(-1.0F, 3600000.0F)));
+    public static final RegistryObject<Block> SHRINE_COLLISION = BLOCKS.register("shrine_collision",
+            () -> new ShrineCollisionBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("shrine_collision"))
+                    .noOcclusion().noLootTable().strength(-1.0F, 3600000.0F).pushReaction(PushReaction.IMMOVEABLE)));
 
     private DeepEndBlocks() {}
 }

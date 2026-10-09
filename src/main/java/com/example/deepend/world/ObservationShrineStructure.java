@@ -24,18 +24,14 @@ public final class ObservationShrineStructure {
         }
         for (var entry : plan.entrySet()) {
             var pos = entry.getKey();
-            BlockState state = state(entry.getValue());
-            if (entry.getValue() == ShrineLayout.Material.FRAME)
-                state = state.setValue(ShrineFrameBlock.ASCENDING, (pos.x() >= 0) == (pos.y() < 9));
-            if (entry.getValue() == ShrineLayout.Material.FRAME_FORK)
-                state = state.setValue(ShrineFrameBlock.FORK, true);
+            BlockState state = stateAt(pos, entry.getValue());
             level.setBlock(base.offset(pos.x(), pos.y(), pos.z()), state, 3);
         }
         return true;
     }
 
-    private static BlockState state(ShrineLayout.Material material) {
-        return switch (material) {
+    public static BlockState stateAt(ShrineLayout.Position pos, ShrineLayout.Material material) {
+        BlockState state = switch (material) {
             case FOUNDATION, DECK, TOWER -> DeepEndBlocks.ANCIENT_SHRINE_STONE.get().defaultBlockState();
             case STEP -> DeepEndBlocks.ANCIENT_SHRINE_SLAB.get().defaultBlockState();
             case RUNE -> DeepEndBlocks.SHRINE_RUNE_STONE.get().defaultBlockState();
@@ -44,5 +40,10 @@ public final class ObservationShrineStructure {
             case FRAME, FRAME_FORK -> DeepEndBlocks.SHRINE_FRAME.get().defaultBlockState();
             case PEDESTAL -> DeepEndBlocks.OBSERVATION_SHRINE.get().defaultBlockState();
         };
+        if (material == ShrineLayout.Material.FRAME)
+            state = state.setValue(ShrineFrameBlock.ASCENDING, (pos.x() >= 0) == (pos.y() < 9));
+        if (material == ShrineLayout.Material.FRAME_FORK)
+            state = state.setValue(ShrineFrameBlock.FORK, true);
+        return state;
     }
 }
