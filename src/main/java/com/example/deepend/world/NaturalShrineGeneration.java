@@ -29,8 +29,7 @@ public final class NaturalShrineGeneration {
         int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE, candidateX, candidateZ);
         BlockPos base = new BlockPos(candidateX, surface + 1, candidateZ);
         if (surface <= level.getMinY() || level.getBlockState(base.below()).isAir()) return;
-        var result = ShrineTransformation.placeFinished(level, base);
-        if (result.success()) player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+        if (ObservationShrineStructure.placeSingle(level, base)) player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                 "The Resonance Lens stirs: an ancient shrine has surfaced nearby."));
     }
 

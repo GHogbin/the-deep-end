@@ -7,7 +7,7 @@ A work-in-progress Minecraft End expansion built around distant regions, ancient
 - Minecraft Java Edition **26.3**
 - Minecraft Forge **66.0.9**
 - Java **25**
-- Current source version: **0.5.2-26.3**
+- Current source version: **0.7.0-26.3**
 
 This repository contains the current port, not the earlier Minecraft 1.20.1 prototype. It is an experimental baseline, not a finished release.
 
@@ -19,9 +19,9 @@ This repository contains the current port, not the earlier Minecraft 1.20.1 prot
 - Complete north-facing shrine multiblock validation. Crystal activation swaps the build for one persistent, detailed display model. Sneak-right-click with the Crystal restores the block build without consuming it. Incomplete builds consume nothing.
 - Build-time checks for geometry invariants, local asset references, PNG decoding, and packaged classes/metadata/resources.
 
-The shrine uses custom Forge-rendered geometry and custom 32×32 charcoal stone, violet crystal, and weathered teal inlay textures. The placed 0.5.2 shrine directly uses the finished custom renderer, following the supplied reference with masonry courses, jagged buttressed towers, thick carved diamond arms, a multi-shard crystal, and emissive cyan script. Generated source artwork and prompts are preserved in docs/art-source. In-game appearance, performance and transformation acceptance remain pending. See [0.5.0 testing](docs/BUILD-0.5.0.md).
+The current gameplay baseline intentionally uses the single-block Observation Shrine placeholder. The custom renderer and multiblock systems remain in the source but are paused while the core exploration loop is developed. Natural distant discovery also places a single shrine block beyond 8,000 blocks from the End origin.
 
-Phase 2 now includes sparse deterministic natural shrine discovery beyond 8,000 blocks from the End origin. Candidate cells are 4,096 blocks wide, only one quarter contain a landmark, and the shrine appears when the player approaches a valid solid surface. The central Dragon Island remains excluded. See [0.6.0 testing](docs/BUILD-0.6.0.md).
+See [0.7.0 testing](docs/BUILD-0.7.0.md).
 
 ## Build
 
@@ -39,7 +39,7 @@ Linux/macOS:
 ./gradlew build --rerun-tasks --no-build-cache --no-daemon --no-configuration-cache --console=plain
 ```
 
-The current artifact is `build/libs/the-deep-end-26.3-0.6.0-26.3.jar`. Use the JAR for the exact source version you built, never an arbitrary first JAR from that folder.
+The current artifact is `build/libs/the-deep-end-26.3-0.7.0-26.3.jar`. Use the JAR for the exact source version you built, never an arbitrary first JAR from that folder.
 
 For the development client, run `gradlew.bat runClient` (or `./gradlew runClient`). See [testing](docs/TESTING.md) for the manual acceptance checklist.
 

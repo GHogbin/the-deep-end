@@ -2,7 +2,6 @@ package com.example.deepend;
 
 import com.example.deepend.world.EndRegionSampler;
 import com.example.deepend.world.ObservationShrineStructure;
-import com.example.deepend.world.ShrineTransformation;
 import com.example.deepend.registry.DeepEndBlocks;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -28,11 +27,12 @@ public final class DeepEndCommands {
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             BlockPos pos = player.blockPosition().offset(0, 0, 10);
-                            var result = ShrineTransformation.placeFinished(player.level(), pos);
-                            player.sendSystemMessage(Component.literal(result.success()
-                                    ? result.message() + " Sneak-right-click the pedestal with Resonant Crystal to restore the repairable block build."
-                                    : result.message()));
-                            return result.success() ? 1 : 0;
+                            if (!ObservationShrineStructure.placeSingle(player.level(), pos)) {
+                                player.sendSystemMessage(Component.literal("The shrine position is occupied or unloaded. Nothing was changed."));
+                                return 0;
+                            }
+                            player.sendSystemMessage(Component.literal("Single-block Observation Shrine placed 10 blocks south."));
+                            return 1;
                         })));
     }
 }

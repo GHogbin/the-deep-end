@@ -11,6 +11,12 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class ObservationShrineStructure {
     private ObservationShrineStructure() {}
 
+    public static boolean placeSingle(ServerLevel level, BlockPos pos) {
+        if (!level.hasChunkAt(pos) || !level.getBlockState(pos).isAir()) return false;
+        level.setBlock(pos, DeepEndBlocks.OBSERVATION_SHRINE.get().defaultBlockState(), 3);
+        return true;
+    }
+
     public static boolean place(ServerLevel level, BlockPos base) {
         var plan = ShrineLayout.create();
         for (int x = -ShrineLayout.RADIUS; x <= ShrineLayout.RADIUS; x++) {
