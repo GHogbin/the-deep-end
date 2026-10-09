@@ -2,6 +2,7 @@ package com.example.deepend;
 
 import com.example.deepend.world.EndRegionSampler;
 import com.example.deepend.world.ObservationShrineStructure;
+import com.example.deepend.world.RegionTerrainGeneration;
 import com.example.deepend.registry.DeepEndBlocks;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -32,6 +33,18 @@ public final class DeepEndCommands {
                                 return 0;
                             }
                             player.sendSystemMessage(Component.literal("Single-block Observation Shrine placed 10 blocks south."));
+                            return 1;
+                        }))
+                .then(Commands.literal("landmark")
+                        .requires(source -> source.isPlayer())
+                        .executes(context -> {
+                            ServerPlayer player = context.getSource().getPlayerOrException();
+                            if (!(player.level() instanceof net.minecraft.server.level.ServerLevel level)
+                                    || !RegionTerrainGeneration.placeTestLandmark(level, player.blockPosition())) {
+                                player.sendSystemMessage(Component.literal("No test landmark placed. Stand on solid End terrain outside the Dragon Island."));
+                                return 0;
+                            }
+                            player.sendSystemMessage(Component.literal("Region landmark placed for testing."));
                             return 1;
                         })));
     }

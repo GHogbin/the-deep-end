@@ -56,12 +56,32 @@ public final class RegionTerrainGeneration {
 
     private static int regionChance(EndRegion region) {
         return switch (region) {
-            case OUTER_END -> 96;
-            case FRINGE -> 48;
-            case DEEP_END -> 28;
-            case ABYSS -> 20;
+            case OUTER_END -> 12;
+            case FRINGE -> 8;
+            case DEEP_END -> 6;
+            case ABYSS -> 4;
             case DRAGON_ISLAND -> Integer.MAX_VALUE;
         };
+    }
+
+    /** Places one region marker at the player's location for acceptance testing. */
+    public static boolean placeTestLandmark(net.minecraft.server.level.ServerLevel level, BlockPos origin) {
+        if (level.dimension() != Level.END) return false;
+        EndRegion region = EndRegionSampler.sample(level, origin).region();
+        if (region == EndRegion.DRAGON_ISLAND) return false;
+        int surfaceY = level.getHeight(Heightmap.Types.WORLD_SURFACE, origin.getX(), origin.getZ());
+        BlockPos base = new BlockPos(origin.getX(), surfaceY, origin.getZ());
+        if (!level.getBlockState(base.below()).isSolid() || !level.getBlockState(base).isAir()) return false;
+        int height = switch (region) {
+            case OUTER_END -> 2;
+            case FRINGE -> 3;
+            case DEEP_END -> 4;
+            case ABYSS -> 5;
+            case DRAGON_ISLAND -> 0;
+        };
+        BlockState material = materialFor(region);
+        for (int y = 0; y < height; y++) level.setBlock(base.above(y), material, 3);
+        return true;
     }
 
     private static int heightFor(EndRegion region, RandomSource random) {
