@@ -108,7 +108,8 @@ public final class ShrineTransformation {
 
     private static AncientShrineEntity createDisplay(ServerLevel level, BlockPos base) {
         var display = new AncientShrineEntity(DeepEndEntities.ANCIENT_SHRINE.get(), level);
-        display.setPos(base.getX() + 0.5D, base.getY(), base.getZ() + 0.5D);
+        // The custom model is authored around its centre; base is the southwest recipe corner.
+        display.setPos(base.getX() + 7.5D, base.getY(), base.getZ() + 7.5D);
         display.addTag(tag(base));
         return display;
     }
