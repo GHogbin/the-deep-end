@@ -9,7 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '0.4.1-26.3'
+version = '0.5.0-26.3'
 group = 'com.example.deepend'
 
 // Mojang ships Java 25 to end users in 26.1+, so your mod should target Java 25.
@@ -72,6 +72,8 @@ tasks.register('verifyModJar') {
                 'com/example/deepend/world/ObservationShrineStructure.class', 'META-INF/mods.toml']
             required += ['com/example/deepend/block/ShrineCrystalBlock.class',
                 'com/example/deepend/world/ShrineTransformation.class',
+                'com/example/deepend/entity/AncientShrineEntity.class',
+                'com/example/deepend/registry/DeepEndEntities.class',
                 'com/example/deepend/block/ShrineCollisionBlock.class',
                 'assets/deep_end/models/block/awakened_shrine.json',
                 'assets/deep_end/blockstates/awakened_shrine.json',

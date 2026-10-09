@@ -3,12 +3,12 @@ package com.example.deepend.world;
 import com.example.deepend.block.ObservationShrineBlock;
 import com.example.deepend.block.ShrineCollisionBlock;
 import com.example.deepend.registry.DeepEndBlocks;
-import com.mojang.math.Transformation;
+import com.example.deepend.entity.AncientShrineEntity;
+import com.example.deepend.registry.DeepEndEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.ProblemReporter;
-import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueInput;
@@ -59,7 +59,7 @@ public final class ShrineTransformation {
             return new Result(false, "The shrine build is incomplete or obstructed at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + ". No Crystal consumed.");
         }
         // Register the display before changing the recipe, so a cancelled entity spawn is harmless.
-        Display.BlockDisplay display = createDisplay(level, base);
+        AncientShrineEntity display = createDisplay(level, base);
         if (!level.addFreshEntity(display)) return new Result(false, "The shrine model could not spawn. Nothing was changed.");
         if (ShrineRecipe.firstMismatch(plan, (local, material) -> {
             BlockState actual = level.getBlockState(base.offset(local.x(), local.y(), local.z()));
@@ -89,19 +89,9 @@ public final class ShrineTransformation {
         return new Result(true, "The complete shrine awakens into its ancient form.");
     }
 
-    private static Display.BlockDisplay createDisplay(ServerLevel level, BlockPos base) {
-        var data = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
-        data.store("block_state", BlockState.CODEC, DeepEndBlocks.AWAKENED_SHRINE.get().defaultBlockState());
-        data.store("transformation", Transformation.EXTENDED_CODEC,
-                new Transformation(new Vector3f(-7, -3, -4), new Quaternionf(), new Vector3f(MODEL_SCALE), new Quaternionf()));
-        // Anchor the display in the pedestal's chunk and disable point-sized frustum culling.
-        data.putFloat("width", 0.0F);
-        data.putFloat("height", 0.0F);
-        data.putFloat("view_range", 2.0F);
-        data.putBoolean("Invulnerable", true);
-        var display = new Display.BlockDisplay(EntityTypes.BLOCK_DISPLAY, level);
-        display.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data.buildResult()));
-        display.setPos(base.getX(), base.getY() + 3, base.getZ() - 3);
+    private static AncientShrineEntity createDisplay(ServerLevel level, BlockPos base) {
+        var display = new AncientShrineEntity(DeepEndEntities.ANCIENT_SHRINE.get(), level);
+        display.setPos(base.getX() + 0.5D, base.getY(), base.getZ() + 0.5D);
         display.addTag(tag(base));
         return display;
     }
@@ -110,7 +100,7 @@ public final class ShrineTransformation {
     public static Result restore(ServerLevel level, BlockPos pedestal, boolean restorePedestal) {
         BlockPos base = baseFromPedestal(pedestal);
         if (!loaded(level, base)) return new Result(false, "Load the complete shrine area before restoring it.");
-        var displays = level.getEntitiesOfClass(Display.BlockDisplay.class, bounds(base),
+        var displays = level.getEntitiesOfClass(AncientShrineEntity.class, bounds(base),
                 entity -> entity.entityTags().contains(tag(base)));
         boolean active = level.getBlockState(pedestal).is(DeepEndBlocks.OBSERVATION_SHRINE.get())
                 && level.getBlockState(pedestal).getValue(ObservationShrineBlock.AWAKENED);
@@ -124,7 +114,7 @@ public final class ShrineTransformation {
                     return new Result(false, "Remove the added block at " + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + " before restoring. Nothing changed.");
             }
         }
-        displays.forEach(Display.BlockDisplay::discard);
+        displays.forEach(AncientShrineEntity::discard);
         for (var entry : ShrineLayout.create().entrySet()) {
             var p = entry.getKey();
             BlockPos pos = base.offset(p.x(), p.y(), p.z());
