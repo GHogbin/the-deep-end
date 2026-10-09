@@ -25,6 +25,38 @@ public final class ShrineTransformation {
     private ShrineTransformation() {}
     public record Result(boolean success, String message) {}
 
+    /** Places the finished shrine directly; used by the command so no block blueprint is shown. */
+    public static Result placeFinished(ServerLevel level, BlockPos base) {
+        if (!loaded(level, base)) return new Result(false, "The shrine area must be loaded and inside world height.");
+        for (int x = -ShrineLayout.RADIUS; x <= ShrineLayout.RADIUS; x++)
+            for (int z = -ShrineLayout.RADIUS; z <= ShrineLayout.RADIUS; z++)
+                for (int y = 0; y < ShrineLayout.HEIGHT; y++)
+                    if (!level.getBlockState(base.offset(x, y, z)).isAir())
+                        return new Result(false, "The shrine needs an empty 15 × 18 × 15 area. Nothing was changed.");
+        AncientShrineEntity display = createDisplay(level, base);
+        if (!level.addFreshEntity(display)) return new Result(false, "The custom shrine model could not spawn. Nothing was changed.");
+        try {
+            for (var entry : ShrineLayout.create().entrySet()) {
+                BlockPos pos = base.offset(entry.getKey().x(), entry.getKey().y(), entry.getKey().z());
+                BlockState replacement = switch (entry.getValue()) {
+                    case PEDESTAL -> DeepEndBlocks.OBSERVATION_SHRINE.get().defaultBlockState().setValue(ObservationShrineBlock.AWAKENED, true);
+                    case FOUNDATION, DECK, TOWER, RUNE, STEP -> DeepEndBlocks.SHRINE_COLLISION.get().defaultBlockState()
+                            .setValue(ShrineCollisionBlock.HALF, entry.getValue() == ShrineLayout.Material.STEP);
+                    default -> Blocks.AIR.defaultBlockState();
+                };
+                level.setBlock(pos, replacement, 3);
+            }
+        } catch (RuntimeException failure) {
+            display.discard();
+            for (int x = -ShrineLayout.RADIUS; x <= ShrineLayout.RADIUS; x++)
+                for (int z = -ShrineLayout.RADIUS; z <= ShrineLayout.RADIUS; z++)
+                    for (int y = 0; y < ShrineLayout.HEIGHT; y++)
+                        level.setBlock(base.offset(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+            return new Result(false, "The custom shrine placement failed; its area was restored.");
+        }
+        return new Result(true, "Finished Observation Shrine placed 10 blocks south.");
+    }
+
     public static BlockPos baseFromPedestal(BlockPos pedestal) { return pedestal.offset(0, -3, 3); }
     private static String tag(BlockPos base) { return "deep_end_shrine_" + base.getX() + "_" + base.getY() + "_" + base.getZ(); }
     private static AABB bounds(BlockPos base) {

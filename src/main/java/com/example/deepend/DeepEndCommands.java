@@ -28,17 +28,11 @@ public final class DeepEndCommands {
                         .executes(context -> {
                             ServerPlayer player = context.getSource().getPlayerOrException();
                             BlockPos pos = player.blockPosition().offset(0, 0, 10);
-                            if (!ObservationShrineStructure.place(player.level(), pos)) {
-                                player.sendSystemMessage(Component.literal("Shrine needs an empty, loaded 15 × 18 × 15 area, centred 10 blocks south of you. Nothing was changed."));
-                                return 0;
-                            }
-                            // The command places the finished shrine: blocks are used only as the
-                            // collision/repair scaffold, then immediately replaced by the custom model.
-                            var result = ShrineTransformation.awaken(player.level(), pos);
+                            var result = ShrineTransformation.placeFinished(player.level(), pos);
                             player.sendSystemMessage(Component.literal(result.success()
-                                    ? "Observation Shrine placed 10 blocks south as its finished ancient structure. Sneak-right-click the pedestal with Resonant Crystal to restore the repairable block build."
-                                    : "Shrine blocks were placed, but its custom model could not activate: " + result.message()));
-                            return 1;
+                                    ? result.message() + " Sneak-right-click the pedestal with Resonant Crystal to restore the repairable block build."
+                                    : result.message()));
+                            return result.success() ? 1 : 0;
                         })));
     }
 }
