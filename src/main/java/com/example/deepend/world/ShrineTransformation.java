@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueInput;
@@ -38,11 +39,27 @@ public final class ShrineTransformation {
         return true;
     }
 
+    private static java.util.List<Display.BlockDisplay> legacyDisplays(ServerLevel level, BlockPos base) {
+        return level.getEntitiesOfClass(Display.BlockDisplay.class, bounds(base),
+                entity -> entity.entityTags().contains(tag(base)));
+    }
+
     public static Result awaken(ServerLevel level, BlockPos pedestal) {
         BlockPos base = baseFromPedestal(pedestal);
         if (!loaded(level, base)) return new Result(false, "The complete shrine area must be loaded and inside world height.");
-        if (level.getBlockState(pedestal).getValue(ObservationShrineBlock.AWAKENED))
+        if (level.getBlockState(pedestal).getValue(ObservationShrineBlock.AWAKENED)) {
+            var legacy = legacyDisplays(level, base);
+            var current = level.getEntitiesOfClass(AncientShrineEntity.class, bounds(base),
+                    entity -> entity.entityTags().contains(tag(base)));
+            if (current.isEmpty() && !legacy.isEmpty()) {
+                legacy.forEach(Display.BlockDisplay::discard);
+                AncientShrineEntity migrated = createDisplay(level, base);
+                if (level.addFreshEntity(migrated))
+                    return new Result(true, "The shrine visual was upgraded to the custom model.");
+                return new Result(false, "The custom shrine model could not spawn; nothing was consumed.");
+            }
             return new Result(false, "This shrine is already awakened. Sneak-right-click with a Crystal to restore its block build.");
+        }
         var plan = ShrineLayout.create();
         var before = new LinkedHashMap<BlockPos, BlockState>();
         var mismatch = ShrineRecipe.firstMismatch(plan, (local, material) -> {
@@ -102,9 +119,10 @@ public final class ShrineTransformation {
         if (!loaded(level, base)) return new Result(false, "Load the complete shrine area before restoring it.");
         var displays = level.getEntitiesOfClass(AncientShrineEntity.class, bounds(base),
                 entity -> entity.entityTags().contains(tag(base)));
+        var legacy = legacyDisplays(level, base);
         boolean active = level.getBlockState(pedestal).is(DeepEndBlocks.OBSERVATION_SHRINE.get())
                 && level.getBlockState(pedestal).getValue(ObservationShrineBlock.AWAKENED);
-        if (displays.isEmpty() && !active) return new Result(false, "This shrine has not been transformed.");
+        if (displays.isEmpty() && legacy.isEmpty() && !active) return new Result(false, "This shrine has not been transformed.");
         if (restorePedestal) {
             for (var entry : ShrineLayout.create().entrySet()) {
                 if (entry.getValue() == ShrineLayout.Material.PEDESTAL) continue;
@@ -115,6 +133,7 @@ public final class ShrineTransformation {
             }
         }
         displays.forEach(AncientShrineEntity::discard);
+        legacy.forEach(Display.BlockDisplay::discard);
         for (var entry : ShrineLayout.create().entrySet()) {
             var p = entry.getKey();
             BlockPos pos = base.offset(p.x(), p.y(), p.z());
