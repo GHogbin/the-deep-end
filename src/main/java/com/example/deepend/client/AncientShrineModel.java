@@ -22,10 +22,12 @@ public final class AncientShrineModel extends EntityModel<EntityRenderState> {
     public AncientShrineModel(ModelPart root) { super(root); }
 
     private static void cube(PartDefinition root, String id, float x, float y, float z, float w, float h, float d) {
-        root.addOrReplaceChild(id, CubeListBuilder.create().texOffs(0, 0).addBox(x, -y - h, z, w, h, d), PartPose.ZERO);
+        // The authored shrine uses a ground-up coordinate system: negative y values are
+        // heights above the entity origin, while the baked cube starts at -y.
+        root.addOrReplaceChild(id, CubeListBuilder.create().texOffs(0, 0).addBox(x, -y, z, w, h, d), PartPose.ZERO);
     }
     private static void rotated(PartDefinition root, String id, float x, float y, float z, float w, float h, float d, float angle) {
-        root.addOrReplaceChild(id, CubeListBuilder.create().texOffs(0, 0).addBox(0, -h, -d / 2, w, h, d), PartPose.offsetAndRotation(x, y, z, 0, 0, angle));
+        root.addOrReplaceChild(id, CubeListBuilder.create().texOffs(0, 0).addBox(0, 0, -d / 2, w, h, d), PartPose.offsetAndRotation(x, -y, z, 0, 0, angle));
     }
     public static LayerDefinition createStone() {
         MeshDefinition mesh = new MeshDefinition(); PartDefinition r = mesh.getRoot();
