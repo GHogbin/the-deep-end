@@ -29,31 +29,63 @@ public final class AncientShrineModel extends EntityModel<EntityRenderState> {
     }
     public static LayerDefinition createStone() {
         MeshDefinition mesh = new MeshDefinition(); PartDefinition r = mesh.getRoot();
-        // Three broad levels reproduce the reference's stepped ruin platform.
-        cube(r,"plinth",-120,0,-120,240,16,240); cube(r,"deck",-96,-16,-96,192,16,192); cube(r,"inner",-80,-32,-80,160,16,160);
+        // Three stepped tiers and a front stair reproduce the reference silhouette.
+        cube(r,"plinth",-120,0,-120,240,16,240);
+        cube(r,"plinthInset",-108,-16,-108,216,12,216);
+        cube(r,"deck",-96,-28,-96,192,16,192);
+        cube(r,"inner",-80,-44,-80,160,16,160);
+        for (int i=0;i<4;i++) cube(r,"frontStep"+i,-48-i*6,-60-i*12,-128+i*10,96+i*12,12,24);
+        cube(r,"frontLanding",-48,-60,-96,96,12,28);
+        // Two asymmetrical rear towers and four shorter corner pylons.
         for (int side : new int[]{-1,1}) {
-            float x=side*80, tall=side<0?260:220;
-            cube(r,"tower"+side,x-16,-48,48,32,tall,32); cube(r,"buttress"+side,x-side*16,-48,64,32,tall-48,32);
-            cube(r,"crown"+side,x-22,-48-tall,45,44,24,38);
-            for(int i=0;i<4;i++) cube(r,"spire"+side+i,x-15,-48-(48+i*16),-80+i*8,30,48-i*5,30);
+            float x=side*80, tall=side<0?272:240;
+            cube(r,"rearTower"+side,x-20,-60,48,40,tall,40);
+            cube(r,"rearShoulder"+side,x-30,-60,28,60,64,48);
+            cube(r,"rearCrown"+side,x-26,-60-tall,42,52,24,46);
+            cube(r,"rearCap"+side,x-14,-84-tall,46,28,28,38);
+            for (int tier=0;tier<3;tier++) cube(r,"rearBreak"+side+tier,x-25,-112-tier*42,28,50,12,52);
         }
-        // Four heavy diamond arms, intentionally separated at the top and bottom.
-        rotated(r,"armUL",-64,-150,0,128,14,18,-Mth.PI/4); rotated(r,"armUR",0,-150,0,128,14,18,Mth.PI/4);
-        rotated(r,"armLL",-64,-76,0,128,14,18,Mth.PI/4); rotated(r,"armLR",0,-76,0,128,14,18,-Mth.PI/4);
-        for(int i=0;i<6;i++){ cube(r,"collarA"+i,-64+i*22,-128-i*18,-12,20,12,24); cube(r,"collarB"+i,10+i*22,-128-i*18,-12,20,12,24); }
+        for (int side : new int[]{-1,1}) for (int front : new int[]{-1,1}) {
+            float x=side*82-14, z=front*82-14;
+            cube(r,"cornerBase"+side+front,x,-60,z,28,44,28);
+            cube(r,"cornerPylon"+side+front,x+3,-104,z+3,22,92,22);
+            cube(r,"cornerCrown"+side+front,x-2,-196,z-2,32,20,32);
+        }
+        // Broken diamond frame around the floating crystal.
+        rotated(r,"armUpperLeft",-78,-184,0,132,18,22,-Mth.PI/4);
+        rotated(r,"armUpperRight",0,-184,0,132,18,22,Mth.PI/4);
+        rotated(r,"armLowerLeft",-78,-84,0,132,18,22,Mth.PI/4);
+        rotated(r,"armLowerRight",0,-84,0,132,18,22,-Mth.PI/4);
+        for(int i=0;i<5;i++) {
+            cube(r,"upperJointL"+i,-72+i*24,-168-i*20,-14,24,14,28);
+            cube(r,"upperJointR"+i,0+i*24,-168-i*20,-14,24,14,28);
+        }
+        cube(r,"frontPedestal",-20,-60,-20,40,36,40);
+        cube(r,"frontPedestalTop",-28,-96,-28,56,12,56);
         return LayerDefinition.create(mesh, 32, 32);
     }
     public static LayerDefinition createRune() {
         MeshDefinition mesh=new MeshDefinition(); PartDefinition r=mesh.getRoot();
-        for(int side:new int[]{-1,1}){float x=side*80; for(int i=0;i<9;i++) cube(r,"towerRune"+side+i,x-2,-55-i*27,30,4,18,2); for(int i=0;i<4;i++) cube(r,"spireRune"+side+i,x-2,-56-i*22,-81+i*8,4,14,2);}
-        cube(r,"floorLine",-4,-33,-80,8,3,160); cube(r,"floorLine2",-72,-33,34,144,3,8);
+        for(int side:new int[]{-1,1}) {
+            float x=side*80;
+            for(int i=0;i<10;i++) cube(r,"towerRune"+side+i,x-3,-72-i*25,29,6,16,3);
+            for(int i=0;i<4;i++) cube(r,"frontRune"+side+i,side*82-3,-118,-88+i*4,6,24,3);
+        }
+        cube(r,"floorLine",-4,-48,-80,8,3,160);
+        cube(r,"floorLine2",-72,-48,34,144,3,8);
+        cube(r,"floorLine3",-72,-48,-42,144,3,8);
+        cube(r,"pedestalRune",-3,-100,-29,6,20,3);
         return LayerDefinition.create(mesh,32,32);
     }
     public static LayerDefinition createCrystal() {
         MeshDefinition mesh=new MeshDefinition(); PartDefinition r=mesh.getRoot();
-        cube(r,"core",-18,-118,-18,36,68,36); cube(r,"shardL",-34,-104,-10,14,52,18); cube(r,"shardR",20,-104,-10,14,52,18);
-        cube(r,"top",-8,-188,-8,16,22,16); cube(r,"bottom",-8,-48,-8,16,22,16);
-        for(int i=0;i<4;i++) cube(r,"orbital"+i,-6,-68-i*30,-6,12,18,12);
+        cube(r,"core",-18,-132,-18,36,76,36);
+        cube(r,"shardL",-38,-118,-12,16,60,20);
+        cube(r,"shardR",22,-118,-12,16,60,20);
+        cube(r,"shardTop",-10,-202,-10,20,30,20);
+        cube(r,"shardBottom",-10,-56,-10,20,30,20);
+        for(int i=0;i<5;i++) cube(r,"orbital"+i,-7,-76-i*29,-7,14,18,14);
+        cube(r,"pedestalCrystal",-10,-112,-10,20,24,20);
         return LayerDefinition.create(mesh,32,32);
     }
 }
