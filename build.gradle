@@ -9,7 +9,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '[7.0.17,8)'
 }
 
-version = '0.10.2-26.3'
+version = '0.11.0-26.3'
 group = 'com.example.deepend'
 
 // Mojang ships Java 25 to end users in 26.1+, so your mod should target Java 25.
@@ -72,6 +72,7 @@ tasks.register('verifyModJar') {
                 'com/example/deepend/world/ObservationShrineStructure.class', 'META-INF/mods.toml']
             required += ['com/example/deepend/block/ShrineCrystalBlock.class',
                 'com/example/deepend/world/ShrineTransformation.class',
+                'com/example/deepend/world/ShrineDatapackActivation.class',
                 'com/example/deepend/entity/AncientShrineEntity.class',
                 'com/example/deepend/registry/DeepEndEntities.class',
                 'com/example/deepend/world/NaturalShrineGeneration.class',
@@ -85,6 +86,8 @@ tasks.register('verifyModJar') {
                 'assets/deep_end/models/block/shrine_frame_fork.json',
                 'assets/deep_end/models/block/ancient_shrine_slab_top.json',
                 'assets/deep_end/textures/item/ancient_resonant_crystal.png']
+            required += ['data/deep_end/function/shrine/activate.mcfunction',
+                'data/deep_end/function/shrine/restore.mcfunction']
             ['ancient_shrine_stone', 'ancient_crystal', 'ancient_rune_inlay'].each { name ->
                 required += "assets/deep_end/textures/block/${name}.png"
             }

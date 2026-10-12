@@ -10,6 +10,7 @@ Target: Minecraft 26.3 / Forge 66.0.9 / Java 25.
 
 ## Later gameplay slices
 
+- Shrine progression: generate a dormant End anchor, require a data-driven item combination, then transform it with datapack-owned structure functions. The current implementation slice uses Resonant Crystal + Chorus Fibre + Resonance Lens and a server-side Forge bridge.
 - Natural landmark placement with deterministic spacing and rarity.
 - Region-specific terrain without changing the central Dragon Island.
 - Void-current hazards, ambient mobs, and encounter design.

@@ -17,6 +17,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import com.example.deepend.registry.DeepEndItems;
 import com.example.deepend.world.ShrineTransformation;
+import com.example.deepend.world.ShrineDatapackActivation;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
@@ -42,8 +43,8 @@ public class ObservationShrineBlock extends Block {
         if (!stack.is(DeepEndItems.RESONANT_CRYSTAL.get())) return InteractionResult.PASS;
         if (level instanceof ServerLevel server) {
             var result = player.isShiftKeyDown()
-                    ? ShrineTransformation.restore(server, pos, true)
-                    : ShrineTransformation.awaken(server, pos);
+                    ? ShrineDatapackActivation.restore(server, pos, player)
+                    : ShrineDatapackActivation.activate(server, pos, player, stack);
             player.sendSystemMessage(Component.literal(result.message()));
             if (!result.success() || player.isShiftKeyDown()) return InteractionResult.SUCCESS;
             stack.shrink(1);
