@@ -3,6 +3,7 @@ package com.example.deepend.item;
 import com.example.deepend.world.EndRegion;
 import com.example.deepend.world.EndRegionSample;
 import com.example.deepend.world.EndRegionSampler;
+import com.example.deepend.world.NaturalShrineGeneration;
 import com.example.deepend.registry.DeepEndBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -22,9 +23,13 @@ public class ResonanceLensItem extends Item {
         if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer && level.dimension() == Level.END) {
             EndRegionSample sample = EndRegionSampler.sample(serverPlayer.level(), serverPlayer.blockPosition());
             BlockPos shrine = findShrine(serverPlayer, 24);
+            BlockPos candidate = NaturalShrineGeneration.nearestCandidate(serverPlayer.blockPosition());
             String signal = shrine != null ? "The Lens locks onto an Observation Shrine at "
                     + shrine.getX() + ", " + shrine.getY() + ", " + shrine.getZ()
                     + ". Its builders were looking outward."
+                    : candidate != null ? "The Lens points toward a dormant shrine site at "
+                    + candidate.getX() + ", " + candidate.getZ() + " (about "
+                    + Math.round(Math.sqrt(serverPlayer.blockPosition().distSqr(candidate))) + " blocks away)."
                     : switch (sample.region()) {
                 case DRAGON_ISLAND, OUTER_END -> "The lens is silent. The distant ruins remain dormant.";
                 case FRINGE -> "A faint harmonic signal answers from beyond the islands.";

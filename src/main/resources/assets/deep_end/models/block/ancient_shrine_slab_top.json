@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "deep_end:block/ancient_shrine_stone",
+    "top": "deep_end:block/ancient_shrine_stone",
+    "side": "deep_end:block/ancient_shrine_stone"
+  }
+}
