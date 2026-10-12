@@ -59,6 +59,7 @@ public final class ShrineTransformation {
 
     public static BlockPos baseFromPedestal(BlockPos pedestal) { return pedestal.offset(0, -3, 3); }
     private static String tag(BlockPos base) { return "deep_end_shrine_" + base.getX() + "_" + base.getY() + "_" + base.getZ(); }
+    private static String singleTag(BlockPos pedestal) { return "deep_end_single_shrine_" + pedestal.getX() + "_" + pedestal.getY() + "_" + pedestal.getZ(); }
     private static AABB bounds(BlockPos base) {
         return new AABB(base.getX() - 8, base.getY() - 1, base.getZ() - 8,
                 base.getX() + 9, base.getY() + 19, base.getZ() + 9);
@@ -77,6 +78,10 @@ public final class ShrineTransformation {
     }
 
     public static Result awaken(ServerLevel level, BlockPos pedestal) {
+        BlockState pedestalState = level.getBlockState(pedestal);
+        if (pedestalState.is(DeepEndBlocks.OBSERVATION_SHRINE.get())) {
+            return awakenSingle(level, pedestal, pedestalState);
+        }
         BlockPos base = baseFromPedestal(pedestal);
         if (!loaded(level, base)) return new Result(false, "The complete shrine area must be loaded and inside world height.");
         if (level.getBlockState(pedestal).getValue(ObservationShrineBlock.AWAKENED)) {
@@ -138,6 +143,26 @@ public final class ShrineTransformation {
         return new Result(true, "The complete shrine awakens into its ancient form.");
     }
 
+    private static Result awakenSingle(ServerLevel level, BlockPos pedestal, BlockState state) {
+        if (state.getValue(ObservationShrineBlock.AWAKENED))
+            return new Result(false, "This shrine is already awakened. Sneak-right-click with a Crystal to restore it.");
+        String shrineTag = singleTag(pedestal);
+        AABB search = new AABB(pedestal).inflate(16.0D, 20.0D, 16.0D);
+        if (!level.getEntitiesOfClass(AncientShrineEntity.class, search,
+                entity -> entity.entityTags().contains(shrineTag)).isEmpty())
+            return new Result(false, "This shrine already has a custom model. Sneak-right-click with a Crystal to restore it.");
+        AncientShrineEntity display = new AncientShrineEntity(DeepEndEntities.ANCIENT_SHRINE.get(), level);
+        display.setPos(pedestal.getX() + 0.5D, pedestal.getY() + 1.0D, pedestal.getZ() + 0.5D);
+        display.addTag(shrineTag);
+        if (!level.addFreshEntity(display)) return new Result(false, "The shrine model could not spawn. Nothing was changed.");
+        level.setBlock(pedestal, state.setValue(ObservationShrineBlock.AWAKENED, true), 3);
+        if (!level.getBlockState(pedestal).getValue(ObservationShrineBlock.AWAKENED)) {
+            display.discard();
+            return new Result(false, "The shrine could not be awakened. Nothing was changed.");
+        }
+        return new Result(true, "The shrine awakens into its ancient form.");
+    }
+
     private static AncientShrineEntity createDisplay(ServerLevel level, BlockPos base) {
         var display = new AncientShrineEntity(DeepEndEntities.ANCIENT_SHRINE.get(), level);
         // The custom model is authored around its centre; base is the southwest recipe corner.
@@ -148,6 +173,19 @@ public final class ShrineTransformation {
 
     /** Restore only owned collision cells or empty recipe cells; never overwrite foreign blocks. */
     public static Result restore(ServerLevel level, BlockPos pedestal, boolean restorePedestal) {
+        BlockState pedestalState = level.getBlockState(pedestal);
+        if (pedestalState.is(DeepEndBlocks.OBSERVATION_SHRINE.get())) {
+            String shrineTag = singleTag(pedestal);
+            AABB search = new AABB(pedestal).inflate(16.0D, 20.0D, 16.0D);
+            var displays = level.getEntitiesOfClass(AncientShrineEntity.class, search,
+                    entity -> entity.entityTags().contains(shrineTag));
+            boolean active = pedestalState.getValue(ObservationShrineBlock.AWAKENED);
+            if (displays.isEmpty() && !active) return new Result(false, "This shrine has not been transformed.");
+            displays.forEach(AncientShrineEntity::discard);
+            if (restorePedestal && active)
+                level.setBlock(pedestal, DeepEndBlocks.OBSERVATION_SHRINE.get().defaultBlockState(), 3);
+            return new Result(true, "The shrine returns to its single-block form. No Crystal consumed.");
+        }
         BlockPos base = baseFromPedestal(pedestal);
         if (!loaded(level, base)) return new Result(false, "Load the complete shrine area before restoring it.");
         var displays = level.getEntitiesOfClass(AncientShrineEntity.class, bounds(base),
